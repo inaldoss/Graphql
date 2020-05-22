@@ -12,10 +12,10 @@ module.exports = async ({ req }) => {
 
     if (token) {
         try {
-            let consteudoToken = jwt.decode(token,
+            let conteudoToken = jwt.decode(token,
                 process.env.APP_AUTH_SECRET)
-            if (new Date(consteudoToken.exp * 1000) > new Date()) {
-                usuario = consteudoToken
+            if (new Date(conteudoToken.exp * 1000) > new Date()) {
+                usuario = conteudoToken
             }
         } catch (error) {
             // token inválido
@@ -25,7 +25,12 @@ module.exports = async ({ req }) => {
     if (usuario && usuario.perfis) {
         admin = usuario.perfis.includes('admin')
     }
+
     const err = new Error('Acesso negado!')
+    const err_admin = new Error('Não é Admin!')
+    const err_usu = new Error('Não é usuário!')
+    const err_fil = new Error('Não passou filtro!')
+
     return {
         usuario,
         admin,
@@ -33,7 +38,18 @@ module.exports = async ({ req }) => {
             if (!usuario) throw err
         },
         validarAdmin() {
-            if (!admin) throw err
+            if (!admin) throw err_admin
+        },
+        validarUsuarioFiltro(filtro) {
+            if (admin) return
+
+            if (!usuario) throw err_usu
+            if (!filtro) throw err_fil
+
+            const { id, email } = filtro
+            if (!id && !email) throw err
+            if (!id && id !== usuario.id) throw err
+            if (email && email !== usuario.email) throw err
         }
     }
 }
